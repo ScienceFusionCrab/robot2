@@ -9,7 +9,16 @@
 	pros::Motor chain(10);
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	pros::adi::DigitalOut matchloader('A', false);
+	pros::Imu imu(20);
 	bool matchloaderDown = false;
+
+	lemlib::Drivetrain drivetrain(&groupL, // left motor group
+                              &groupR, // right motor group
+                              10.5, // 10.5 inch track width
+                              lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
+                              360, // drivetrain rpm is 360
+                              2 // horizontal drift is 2 (for now)
+	);
 
 /**
  * A callback function for LLEMU's center button.
@@ -17,15 +26,7 @@
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
+void on_center_button() {}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
