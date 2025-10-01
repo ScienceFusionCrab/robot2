@@ -1,5 +1,6 @@
 #include "main.h"
 #include "lemlib/chassis/chassis.hpp"
+#include "pros/abstract_motor.hpp"
 #include "pros/adi.hpp"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
@@ -12,6 +13,7 @@
 	pros::adi::DigitalOut matchloader('A', false);
 	pros::Imu imu(20);
 	bool matchloaderDown = false;
+	pros::Motor therizzler(9);
 
 	lemlib::Drivetrain drivetrain(&groupL, // left motor group
         &groupR, // right motor group
@@ -87,7 +89,7 @@ void on_center_button() {}
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+	pros::lcd::set_text(1, "Meow meow meow meow ^⋅ω⋅^");
 
 	pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -142,6 +144,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	therizzler.set_brake_mode(pros::MotorBrake::brake);
 	while (true) {
 		int dir = controller.get_analog(ANALOG_LEFT_Y);
 			int turn = controller.get_analog(ANALOG_RIGHT_X);
@@ -159,6 +162,13 @@ void opcontrol() {
 			matchloaderDown = !matchloaderDown;
 		}
 		matchloader.set_value(matchloaderDown);
+
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+			therizzler.move(-127);
+			chain.move(-127);
+		} else {
+			therizzler.move(0);
+		}
 
 		pros::delay(20);
 	}
