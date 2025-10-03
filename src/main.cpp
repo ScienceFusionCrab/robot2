@@ -152,9 +152,9 @@ void opcontrol() {
 			groupR.move(dir - turn);
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-			chain.move(-127);
-		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
 			chain.move(127);
+		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+			chain.move(-127);
 		} else chain.move(0);
 
 		//Actuates the matchloader by toggling bool (Mae's code, you can tell cause its commented)
@@ -165,7 +165,7 @@ void opcontrol() {
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
 			therizzler.move(-127);
-			chain.move(-127);
+			chain.move(127);
 		} else {
 			therizzler.move(0);
 		}
