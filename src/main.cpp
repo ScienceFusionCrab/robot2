@@ -4,22 +4,27 @@
 #include "pros/adi.hpp"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
+#include "pros/motors.h"
 
 
-	pros::MotorGroup groupL({-1, -2, -3});
+	pros::MotorGroup groupL({1, 2, 3});
 	pros::MotorGroup groupR({4, 5, 6});
 	pros::Motor chain(10);
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
-	pros::adi::DigitalOut matchloader('A', false);
+	pros::adi::DigitalOut tuah('A', true);
 	pros::Imu imu(20);
-	bool matchloaderDown = false;
+	bool tuahDown = true;
+	pros::adi::DigitalOut hawk('B', false);
 	pros::Motor therizzler(9);
+	bool hawkDown = false;
+	pros::adi::DigitalOut bristol('C', false);
+	bool bristolDown = false;
 
 	lemlib::Drivetrain drivetrain(&groupL, // left motor group
         &groupR, // right motor group
         10.5, // 10.5 inch track width
         lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
-        360, // drivetrain rpm is 360
+        450, // drivetrain rpm is 360
         2 // horizontal drift is 2 (for now)
 	);
 
@@ -46,9 +51,9 @@
 	);
 
 	lemlib::ControllerSettings angular_controller(
-		2, // proportional gain (kP)
+		4, // proportional gain (kP)
         0, // integral gain (kI)
-        10, // derivative gain (kD)
+        11, // derivative gain (kD)
         0, // anti windup
         0, // small error range, in degrees
         0, // small error range timeout, in milliseconds
@@ -124,10 +129,11 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	    // set position to x:0, y:0, heading:0
+	chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
     chassis.setPose(0, 0, 0);
-    // turn to face heading 90 with a very long timeout
-    chassis.turnToHeading(90, 100000);
+	chassis.moveToPoint(0, 0, 1000, {.forwards = false, .maxSpeed = 53}, true);
+	//chassis.setPose(0, 0, 0);
+	//chassis.turnToPoint(20, 0, 1000);
 }
 
 /**
@@ -147,9 +153,9 @@ void opcontrol() {
 	therizzler.set_brake_mode(pros::MotorBrake::brake);
 	while (true) {
 		int dir = controller.get_analog(ANALOG_LEFT_Y);
-			int turn = controller.get_analog(ANALOG_RIGHT_X);
-			groupL.move(dir + turn);
-			groupR.move(dir - turn);
+		int turn = controller.get_analog(ANALOG_RIGHT_X);
+		groupL.move(dir - turn);
+		groupR.move(dir + turn);
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
 			chain.move(127);
@@ -159,9 +165,14 @@ void opcontrol() {
 
 		//Actuates the matchloader by toggling bool (Mae's code, you can tell cause its commented)
 		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
-			matchloaderDown = !matchloaderDown;
+			tuahDown = !tuahDown;
 		}
-		matchloader.set_value(matchloaderDown);
+		tuah.set_value(tuahDown);
+
+		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+			hawkDown = !hawkDown;
+		}
+		hawk.set_value(hawkDown);
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
 			therizzler.move(-127);
