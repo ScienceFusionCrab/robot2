@@ -5,20 +5,20 @@
 #include "pros/misc.h"
 #include "pros/misc.hpp"
 #include "pros/motors.h"
+#include "pros/rtos.hpp"
 
 
-	pros::MotorGroup groupL({1, 2, 3});
-	pros::MotorGroup groupR({-4, -5, -6});
+	pros::MotorGroup groupL({-1, -2, -3});
+	pros::MotorGroup groupR({4, 5, 6});
 	pros::Motor chain(10);
-	pros::Controller controller(pros::E_CONTROLLER_MASTER);
-	pros::adi::DigitalOut tuah('A', true);
-	pros::Imu imu(20);
-	bool tuahDown = true;
 	pros::adi::DigitalOut hawk('B', false);
-	pros::Motor therizzler(9);
+	pros::Imu imu(20);
 	bool hawkDown = false;
-	pros::adi::DigitalOut bristol('C', false);
-	bool bristolDown = false;
+	pros::adi::DigitalOut tuah('A', false);
+	pros::Motor therizzler(9);
+	bool tuahDown = false;
+	pros::adi::DigitalOut bristol('C', true);
+	bool bristolDown = true;
 
 	lemlib::Drivetrain drivetrain(&groupL, // left motor group
         &groupR, // right motor group
@@ -137,9 +137,16 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-    //chassis.setPose(0, 0, 0);
-	chassis.moveToPoint(0, 24, 1000);
-
+		chassis.setPose(0, 0, 0);
+	//drops the aligner
+		chain.move(127);
+		pros::delay(250);
+		chain.move(0);
+	//suck balls
+		chassis.moveToPoint(0, 12, 4000, {.maxSpeed = 80});
+		chassis.turnToHeading(-90, 500, {.maxSpeed = 80});
+		chassis.setPose(0,0,0);
+		chassis.moveToPoint(-24, 0, 4000, {.maxSpeed = 80});
 }
 
 /**
@@ -156,10 +163,10 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	therizzler.set_brake_mode(pros::MotorBrake::brake);
+	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	while (true) {
-		int dir = -controller.get_analog(ANALOG_LEFT_Y);
-			int turn = -controller.get_analog(ANALOG_RIGHT_X);
+		int dir = controller.get_analog(ANALOG_LEFT_Y);
+			int turn = controller.get_analog(ANALOG_RIGHT_X);
 			groupL.move(dir + turn);
 			groupR.move(dir - turn);
 
@@ -169,20 +176,22 @@ void opcontrol() {
 			chain.move(-127);
 		} else chain.move(0);
 
-		//Actuates the matchloader by toggling bool (Mae's code, you can tell cause its commented)
 		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
-			tuahDown = !tuahDown;
-		}
-		tuah.set_value(tuahDown);
-
-		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
 			hawkDown = !hawkDown;
 		}
 		hawk.set_value(hawkDown);
 
+		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
+			tuahDown = !tuahDown;
+			pros::delay(50);
+			bristolDown = !bristolDown;
+		}
+		tuah.set_value(tuahDown);
+		bristol.set_value(bristolDown);
+
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
 			therizzler.move(-127);
-			chain.move(127);
+			chain.move(-127);
 		} else {
 			therizzler.move(0);
 		}
