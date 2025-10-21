@@ -7,7 +7,7 @@
 #include "pros/motors.h"
 
 
-	pros::MotorGroup groupL({1, 2, 3});
+	pros::MotorGroup groupL({-1, -2, -3});
 	pros::MotorGroup groupR({4, 5, 6});
 	pros::Motor chain(10);
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
