@@ -7,8 +7,8 @@
 #include "pros/motors.h"
 
 
-	pros::MotorGroup groupL({-1, -2, -3});
-	pros::MotorGroup groupR({4, 5, 6});
+	pros::MotorGroup groupL({1, 2, 3});
+	pros::MotorGroup groupR({-4, -5, -6});
 	pros::Motor chain(10);
 	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	pros::adi::DigitalOut tuah('A', true);
@@ -70,12 +70,11 @@ lemlib::ControllerSettings angular_controller(
 		&imu // inertial sensor
 	);
 
-	lemlib::Chassis chassis
-						(drivetrain,
-                        lateral_controller,
-                        angular_controller,
-						sensors
-	);
+lemlib::Chassis chassis(drivetrain, // drivetrain settings
+                        lateral_controller, // lateral PID settings
+                        angular_controller, // angular PID settings
+                        sensors // odometry sensors
+);
 
 
 /**
@@ -93,10 +92,19 @@ void on_center_button() {}
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Meow meow meow meow ^⋅ω⋅^");
-
-	pros::lcd::register_btn1_cb(on_center_button);
+    pros::lcd::initialize(); // initialize brain screen
+    chassis.calibrate(); // calibrate sensors
+    // print position to brain screen
+    pros::Task screen_task([&]() {
+        while (true) {
+            // print robot location to the brain screen
+            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+            // delay to save resources
+            pros::delay(20);
+        }
+    });
 }
 
 /**
@@ -129,11 +137,9 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	chassis.setBrakeMode(pros::E_MOTOR_BRAKE_BRAKE);
-    chassis.setPose(0, 0, 0);
-	chassis.moveToPoint(24, 0, 1000, {.forwards = false, .maxSpeed = 53}, true);
-	chassis.setPose(0, 0, 0);
-	chassis.turnToPoint(0, 0, 1000);
+    //chassis.setPose(0, 0, 0);
+	chassis.moveToPoint(0, 24, 1000);
+
 }
 
 /**
@@ -152,8 +158,8 @@ void autonomous() {
 void opcontrol() {
 	therizzler.set_brake_mode(pros::MotorBrake::brake);
 	while (true) {
-		int dir = controller.get_analog(ANALOG_LEFT_Y);
-			int turn = controller.get_analog(ANALOG_RIGHT_X);
+		int dir = -controller.get_analog(ANALOG_LEFT_Y);
+			int turn = -controller.get_analog(ANALOG_RIGHT_X);
 			groupL.move(dir + turn);
 			groupR.move(dir - turn);
 
