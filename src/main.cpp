@@ -50,17 +50,17 @@
         20 // maximum acceleration (slew)
 	);
 
-lemlib::ControllerSettings angular_controller(
-	2, // proportional gain (kP)
-    0, // integral gain (kI)
-    10, // derivative gain (kD)
-    3, // anti windup
-    1, // small error range, in inches
-    100, // small error range timeout, in milliseconds
-    3, // large error range, in inches
-    500, // large error range timeout, in milliseconds
-    0 // maximum acceleration (slew)
-);
+	lemlib::ControllerSettings angular_controller(
+		6, // proportional gain (kP)
+		0, // integral gain (kI)
+		55, // derivative gain (kD)
+		3, // anti windup
+		1, // small error range, in inches
+		100, // small error range timeout, in milliseconds
+		3, // large error range, in inches
+		500, // large error range timeout, in milliseconds
+		0 // maximum acceleration (slew)
+	);
 
 	lemlib::OdomSensors sensors(
 		nullptr, // vertical tracking wheel 1, set to null
@@ -137,16 +137,34 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+	//inital setup
 		chassis.setPose(0, 0, 0);
+		tuahDown = !tuahDown;
+		tuah.set_value(tuahDown);
+		bristolDown = !bristolDown;
+		bristol.set_value(bristolDown);
 	//drops the aligner
 		chain.move(127);
 		pros::delay(250);
 		chain.move(0);
-	//suck balls
-		chassis.moveToPoint(0, 12, 4000, {.maxSpeed = 80});
+	//move to balls
+		chassis.moveToPoint(0, 10, 1000, {.maxSpeed = 80});
 		chassis.turnToHeading(-90, 500, {.maxSpeed = 80});
-		chassis.setPose(0,0,0);
-		chassis.moveToPoint(-24, 0, 4000, {.maxSpeed = 80});
+		//chassis.setPose(0,0,0);
+		chassis.moveToPoint(-24, 10, 4000, {.maxSpeed = 80});
+	//suck balls
+		pros::delay(2000);
+		hawkDown = !hawkDown;
+		hawk.set_value(hawkDown);
+		chain.move(-127);
+		chassis.moveToPoint(-50, 10, 4000);
+	//move to goal
+		chassis.moveToPoint(-15, 10, 4000, {.forwards = false, .maxSpeed = 100});
+		chassis.turnToHeading(0, 1000);
+		chassis.moveToPoint(-15, 33, 1000);
+		chassis.turnToHeading(90, 2000);
+		chassis.moveToPoint(-48, 33, 6000, {.forwards = false, .maxSpeed = 100});
+		therizzler.move(-127);
 }
 
 /**
