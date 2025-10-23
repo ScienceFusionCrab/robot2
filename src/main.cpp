@@ -39,9 +39,9 @@
 	);
 
 	lemlib::ControllerSettings lateral_controller(
-		10, // proportional gain (kP)
+		12, // proportional gain (kP)
         0, // integral gain (kI)
-        3, // derivative gain (kD)
+        8, // derivative gain (kD)
         3, // anti windup
         1, // small error range, in inches
         100, // small error range timeout, in milliseconds
@@ -161,9 +161,9 @@ void autonomous() {
 	//move to goal
 		chassis.moveToPoint(-15, 10, 4000, {.forwards = false, .maxSpeed = 100});
 		chassis.turnToHeading(0, 1000);
-		chassis.moveToPoint(-15, 33, 1000);
+		chassis.moveToPoint(-15, 35, 1000);
 		chassis.turnToHeading(90, 2000);
-		chassis.moveToPoint(-48, 33, 6000, {.forwards = false, .maxSpeed = 100});
+		chassis.moveToPoint(-48, 35, 8000, {.forwards = false, .maxSpeed = 100});
 		therizzler.move(-127);
 }
 
