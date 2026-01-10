@@ -8,17 +8,17 @@
 #include "pros/rtos.hpp"
 
 
-	pros::MotorGroup groupL({-1, -2, -3});
-	pros::MotorGroup groupR({4, 5, 6});
-	pros::Motor chain(10);
-	pros::adi::DigitalOut hawk('B', false);
-	pros::Imu imu(20);
-	bool hawkDown = false;
-	pros::adi::DigitalOut tuah('A', false);
-	pros::Motor therizzler(9);
-	bool tuahDown = false;
-	pros::adi::DigitalOut bristol('C', true);
-	bool bristolDown = true;
+	pros::MotorGroup groupL({16, -17, 18});
+	pros::MotorGroup groupR({13, -14, 15});
+	pros::MotorGroup chain({20, 9});						//intake
+	pros::adi::DigitalOut hawk('G', false);	 //upsies downsies
+    bool hawkDown = false;
+	pros::Imu imu(12);
+	pros::adi::DigitalOut tuah('H', false);	//match loader
+    bool tuahDown = false;
+	pros::Motor therizzler(10);								//wedge
+	pros::adi::DigitalOut descore('F',false);
+	bool descoreDown = false;
 
 	lemlib::Drivetrain drivetrain(&groupL, // left motor group
         &groupR, // right motor group
@@ -137,6 +137,40 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+	//initial
+		chassis.setPose(0, 0, 0);
+		hawkDown = !hawkDown;
+		hawk.set_value(hawkDown);
+	//move to blocks
+		chassis.moveToPoint(0, 10, 1000, {.maxSpeed = 80});
+		chassis.turnToHeading(-90, 500, {.maxSpeed = 80});
+		chassis.moveToPoint(-24, 10, 4000, {.maxSpeed = 80});
+	//suck blocks
+		pros::delay(1000);
+		tuahDown = !tuahDown;
+		tuah.set_value(tuahDown);
+		chain.move(-127);
+		chassis.moveToPoint(-50, 10, 4000);
+	//move to long goal
+		chassis.moveToPoint(-15, 10, 4000, {.forwards = false, .maxSpeed = 100});
+		chassis.turnToHeading(0, 1000);
+		chassis.moveToPoint(-15, 35, 1000);
+		chassis.turnToHeading(90, 2000);
+		chassis.moveToPoint(-48, 35, 8000, {.forwards = false, .maxSpeed = 100});
+	//deposit in long goal
+		therizzler.move(-127);
+		chain.move(127);
+		pros::delay(2000);
+	//push further in
+		chassis.moveToPoint(-15, 25, 1000, {.maxSpeed = 100});
+		chassis.turnToHeading(180, 1000);
+		chassis.moveToPoint(-15, 12, 1000);
+		chassis.turnToHeading(-90, 1000);
+		chassis.moveToPoint(-48, 35, 1000);
+		descoreDown = !descoreDown;
+		descore.set_value(descoreDown);
+
+/*
 	//inital setup
 		chassis.setPose(0, 0, 0);
 		tuahDown = !tuahDown;
@@ -165,6 +199,7 @@ void autonomous() {
 		chassis.turnToHeading(90, 2000);
 		chassis.moveToPoint(-48, 35, 8000, {.forwards = false, .maxSpeed = 100});
 		therizzler.move(-127);
+*/
 }
 
 /**
@@ -189,9 +224,9 @@ void opcontrol() {
 			groupR.move(dir - turn);
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-			chain.move(127);
+			therizzler.move(127);
 		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-			chain.move(-127);
+			therizzler.move(-127);
 		} else chain.move(0);
 
 		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
@@ -202,16 +237,14 @@ void opcontrol() {
 		if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2)) {
 			tuahDown = !tuahDown;
 			pros::delay(50);
-			bristolDown = !bristolDown;
 		}
 		tuah.set_value(tuahDown);
-		bristol.set_value(bristolDown);
 
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
 			therizzler.move(-127);
 			chain.move(-127);
 		} else {
-			therizzler.move(0);
+			chain.move(0);
 		}
 
 		pros::delay(20);
